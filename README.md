@@ -12,11 +12,11 @@ CloudTasks Pro is a multi-container web application deployed automatically on an
 
 | Service | Container Name | EC2 Port | Live URL Format to Send to Teacher |
 |---|---|---|---|
-| **Main Web App (Nginx Proxy)** | `cloudtasks-nginx` | **8081** | `http://<EC2_PUBLIC_IP>:8081` |
-| **Web Frontend UI (Direct)** | `cloudtasks-web` | **3000** | `http://<EC2_PUBLIC_IP>:3000` |
-| **REST API Health & JSON** | `cloudtasks-api` | **4000** | `http://<EC2_PUBLIC_IP>:4000/api/health` |
-| **REST API All Tasks JSON** | `cloudtasks-api` | **4000** | `http://<EC2_PUBLIC_IP>:4000/api/tasks` |
-| **Jenkins CI/CD Dashboard** | Host Service | **8080** | `http://<EC2_PUBLIC_IP>:8080` |
+| **Main Web App (Nginx Proxy)** | `cloudtasks-nginx` | **8081** | `http://<52.74.218.180>:8081` |
+| **Web Frontend UI (Direct)** | `cloudtasks-web` | **3000** | `http://<52.74.218.180>:3000` |
+| **REST API Health & JSON** | `cloudtasks-api` | **4000** | `http://<52.74.218.180>:4000/api/health` |
+| **REST API All Tasks JSON** | `cloudtasks-api` | **4000** | `http://<52.74.218.180>:4000/api/tasks` |
+| **Jenkins CI/CD Dashboard** | Host Service | **8080** | `http://<52.74.218.180>:8080` |
 | **Redis Persistent Store** | `cloudtasks-redis` | Internal `6379` | Accessed internally by `api` |
 
 ---
