@@ -1,0 +1,1213 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CloudTasks Pro v2.1 · AWS EC2 (:8081) & Jenkins CI/CD (:8080)</title>
+  <style>
+    :root {
+      --bg: #f3f6f9;
+      --surface: #ffffff;
+      --surface-alt: #f8fafc;
+      --ink: #0f172a;
+      --muted: #475569;
+      --line: #e2e8f0;
+      --primary: #0f766e;
+      --primary-hover: #115e59;
+      --primary-soft: #ccfbf1;
+      --accent: #2563eb;
+      --accent-soft: #dbeafe;
+      --warn: #d97706;
+      --warn-soft: #fef3c7;
+      --danger: #dc2626;
+      --danger-soft: #fee2e2;
+      --success: #16a34a;
+      --success-soft: #dcfce7;
+      --shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
+    }
+    [data-theme="dark"] {
+      --bg: #0b1120;
+      --surface: #1e293b;
+      --surface-alt: #0f172a;
+      --ink: #f8fafc;
+      --muted: #94a3b8;
+      --line: #334155;
+      --primary: #14b8a6;
+      --primary-hover: #0d9488;
+      --primary-soft: rgba(20, 184, 166, 0.18);
+      --accent: #3b82f6;
+      --accent-soft: rgba(59, 130, 246, 0.2);
+      --warn: #f59e0b;
+      --warn-soft: rgba(245, 158, 11, 0.2);
+      --danger: #ef4444;
+      --danger-soft: rgba(239, 68, 68, 0.2);
+      --success: #22c55e;
+      --success-soft: rgba(34, 197, 94, 0.2);
+      --shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    }
+    .topbar {
+      background: var(--surface);
+      border-bottom: 1px solid var(--line);
+      padding: 14px 24px;
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      box-shadow: var(--shadow);
+    }
+    .topbar-inner {
+      max-width: 1280px;
+      margin: 0 auto;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .brand-logo {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      color: #fff;
+      font-weight: 800;
+      font-size: 1.2rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .brand h1 {
+      font-size: 1.25rem;
+      margin: 0;
+      letter-spacing: -0.02em;
+    }
+    .brand p {
+      margin: 0;
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+    .status-pills {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+    }
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 11px;
+      border-radius: 999px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      border: 1px solid var(--line);
+      background: var(--surface-alt);
+      color: var(--ink);
+      text-decoration: none;
+    }
+    .pill.live {
+      background: var(--success-soft);
+      color: var(--success);
+      border-color: transparent;
+    }
+    .pill.jenkins {
+      background: var(--accent-soft);
+      color: var(--accent);
+      border-color: transparent;
+    }
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: currentColor;
+      display: inline-block;
+    }
+    .nav-tabs {
+      max-width: 1280px;
+      margin: 18px auto 0;
+      padding: 0 24px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .tab-btn {
+      padding: 10px 16px;
+      border-radius: 10px;
+      border: 1px solid var(--line);
+      background: var(--surface);
+      color: var(--muted);
+      font: inherit;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .tab-btn:hover {
+      color: var(--ink);
+      border-color: var(--primary);
+    }
+    .tab-btn.active {
+      background: var(--primary);
+      color: #fff;
+      border-color: var(--primary);
+      box-shadow: 0 3px 10px rgba(15, 118, 110, 0.25);
+    }
+    main {
+      max-width: 1280px;
+      margin: 18px auto 60px;
+      padding: 0 24px;
+    }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+    .kpi-card {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 18px 20px;
+      box-shadow: var(--shadow);
+    }
+    .kpi-label {
+      font-size: 0.82rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      font-weight: 600;
+    }
+    .kpi-value {
+      font-size: 2rem;
+      font-weight: 800;
+      margin: 6px 0 4px;
+    }
+    .kpi-sub {
+      font-size: 0.82rem;
+      color: var(--muted);
+    }
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1.35fr 1fr;
+      gap: 20px;
+      align-items: start;
+    }
+    @media (max-width: 920px) {
+      .grid-2 { grid-template-columns: 1fr; }
+    }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: var(--shadow);
+      margin-bottom: 20px;
+    }
+    .card h2 {
+      margin: 0 0 6px;
+      font-size: 1.12rem;
+    }
+    .card-sub {
+      margin: 0 0 16px;
+      color: var(--muted);
+      font-size: 0.88rem;
+    }
+    .form-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr 1fr auto;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+    @media (max-width: 920px) {
+      .form-grid { grid-template-columns: 1fr 1fr; }
+    }
+    input[type="text"], input[type="search"], select {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 8px;
+      border: 1px solid var(--line);
+      background: var(--surface-alt);
+      color: var(--ink);
+      font: inherit;
+    }
+    button {
+      font: inherit;
+      font-weight: 600;
+      padding: 10px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      border: 1px solid var(--primary);
+      background: var(--primary);
+      color: #fff;
+      transition: opacity 0.15s;
+    }
+    button:hover { opacity: 0.92; }
+    button.secondary {
+      background: var(--surface-alt);
+      color: var(--ink);
+      border-color: var(--line);
+    }
+    button.small {
+      padding: 5px 10px;
+      font-size: 0.8rem;
+      border-radius: 6px;
+    }
+    button.danger-btn {
+      background: var(--danger-soft);
+      color: var(--danger);
+      border-color: transparent;
+    }
+    .badge {
+      display: inline-block;
+      padding: 3px 9px;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 700;
+    }
+    .badge.High { background: var(--danger-soft); color: var(--danger); }
+    .badge.Medium { background: var(--warn-soft); color: var(--warn); }
+    .badge.Low { background: var(--success-soft); color: var(--success); }
+    .badge.cat { background: var(--accent-soft); color: var(--accent); }
+    .badge.status-done { background: var(--success-soft); color: var(--success); }
+    .badge.status-in-progress { background: var(--warn-soft); color: var(--warn); }
+    .badge.status-todo { background: var(--surface-alt); color: var(--muted); border: 1px solid var(--line); }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    th, td {
+      text-align: left;
+      padding: 11px 10px;
+      border-bottom: 1px solid var(--line);
+      vertical-align: middle;
+    }
+    th {
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--muted);
+    }
+    .task-done-title {
+      text-decoration: line-through;
+      color: var(--muted);
+    }
+    .kanban-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px;
+    }
+    @media (max-width: 900px) {
+      .kanban-grid { grid-template-columns: 1fr; }
+    }
+    .kanban-col {
+      background: var(--surface-alt);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 16px;
+      min-height: 360px;
+    }
+    .kanban-col h3 {
+      margin: 0 0 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 1rem;
+    }
+    .kanban-card {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 14px;
+      margin-bottom: 12px;
+      box-shadow: var(--shadow);
+    }
+    .kanban-card-title {
+      font-weight: 600;
+      margin: 8px 0;
+    }
+    .kanban-actions {
+      display: flex;
+      gap: 6px;
+      margin-top: 10px;
+      flex-wrap: wrap;
+    }
+    .bar-row {
+      margin-bottom: 14px;
+    }
+    .bar-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.88rem;
+      margin-bottom: 4px;
+      font-weight: 600;
+    }
+    .bar-track {
+      height: 10px;
+      background: var(--surface-alt);
+      border-radius: 999px;
+      overflow: hidden;
+      border: 1px solid var(--line);
+    }
+    .bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--primary), var(--accent));
+      border-radius: 999px;
+      transition: width 0.3s ease;
+    }
+    .mono {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 0.86rem;
+    }
+    pre.codebox {
+      background: var(--surface-alt);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 12px 14px;
+      overflow-x: auto;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 0.84rem;
+      margin: 8px 0 16px;
+    }
+    .link-box {
+      padding: 12px 14px;
+      border-radius: 8px;
+      background: var(--surface-alt);
+      border: 1px solid var(--line);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+      flex-wrap: wrap;
+    }
+    .link-box a {
+      color: var(--accent);
+      font-weight: 600;
+      text-decoration: none;
+    }
+    .link-box a:hover { text-decoration: underline; }
+    .error-banner {
+      color: var(--danger);
+      font-weight: 600;
+      min-height: 1.3em;
+      margin: 4px 0;
+    }
+    .filter-bar {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr 1fr auto;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    @media (max-width: 900px) {
+      .filter-bar { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <div class="brand-logo">CT</div>
+        <div>
+          <h1>CloudTasks Pro v2.1 · Cloud &amp; DevOps Suite</h1>
+          <p>GROUP-03 · App Gateway on Port :8081 · Jenkins CI/CD on Port :8080 · AWS EC2 Host</p>
+        </div>
+      </div>
+      <div class="status-pills">
+        <span class="pill live"><span class="dot"></span> <span id="hdr-api-status">API Online</span></span>
+        <span class="pill mono" id="hdr-host-ip">Host: detecting…</span>
+        <a class="pill mono" id="hdr-app-link" href="#" target="_blank">Port :8081 App</a>
+        <a class="pill mono" id="hdr-api-link" href="/api/health" target="_blank">Port :4000 API</a>
+        <a class="pill jenkins mono" id="hdr-jenkins-link" href="#" target="_blank">Port :8080 Jenkins</a>
+        <button class="secondary small" id="theme-toggle" type="button">🌙 Theme</button>
+      </div>
+    </div>
+  </header>
+
+  <nav class="nav-tabs" aria-label="Application sections">
+    <button class="tab-btn active" data-tab="tab-dashboard">📊 1. Dashboard Overview</button>
+    <button class="tab-btn" data-tab="tab-tasks">✅ 2. Task Manager</button>
+    <button class="tab-btn" data-tab="tab-kanban">📋 3. Kanban Board</button>
+    <button class="tab-btn" data-tab="tab-analytics">📈 4. Analytics &amp; Reports</button>
+    <button class="tab-btn" data-tab="tab-ec2">🌐 5. EC2 Ports &amp; Teacher Links</button>
+    <button class="tab-btn" data-tab="tab-guide">📖 6. Setup Guide (Port 8081)</button>
+  </nav>
+
+  <main>
+    <p id="error" class="error-banner" role="alert"></p>
+
+    <!-- TAB 1: DASHBOARD OVERVIEW -->
+    <section id="tab-dashboard" class="tab-panel active">
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-label">Total Project Tasks</div>
+          <div class="kpi-value" id="kpi-total">0</div>
+          <div class="kpi-sub">Stored in Redis / API Store</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">In Progress</div>
+          <div class="kpi-value" id="kpi-progress" style="color: var(--warn);">0</div>
+          <div class="kpi-sub">Active sprint work items</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Completed Tasks</div>
+          <div class="kpi-value" id="kpi-done" style="color: var(--success);">0</div>
+          <div class="kpi-sub" id="kpi-rate">0% completion rate</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">High Priority</div>
+          <div class="kpi-value" id="kpi-high" style="color: var(--danger);">0</div>
+          <div class="kpi-sub">Critical deployment &amp; delivery items</div>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <h2>Quick Add Project Task</h2>
+          <p class="card-sub">Create a new task directly on the EC2 backend and see it update across all tabs immediately.</p>
+          <div class="form-grid">
+            <input id="title" type="text" maxlength="140" placeholder="What needs doing? (e.g. Test Port 8081 Nginx Gateway)" aria-label="New task">
+            <select id="category" aria-label="Category">
+              <option value="DevOps">DevOps</option>
+              <option value="Cloud EC2">Cloud EC2</option>
+              <option value="Backend API">Backend API</option>
+              <option value="Frontend UI">Frontend UI</option>
+              <option value="Documentation">Documentation</option>
+            </select>
+            <select id="priority" aria-label="Priority">
+              <option value="High">High Priority</option>
+              <option value="Medium" selected>Medium Priority</option>
+              <option value="Low">Low Priority</option>
+            </select>
+            <select id="assignee" aria-label="Assignee">
+              <option value="Hean Matt">Hean Matt</option>
+              <option value="Group-03 Dev">Group-03 Dev</option>
+              <option value="QA Engineer">QA Engineer</option>
+              <option value="DevOps Lead">DevOps Lead</option>
+            </select>
+            <button id="add" type="button">+ Add Task</button>
+          </div>
+
+          <h2 style="margin-top: 22px;">Recent Tasks</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>Status</th>
+                <th>Task Title</th>
+                <th>Category</th>
+                <th>Priority</th>
+                <th>Assignee</th>
+              </tr>
+            </thead>
+            <tbody id="dash-recent-body"></tbody>
+          </table>
+          <p id="empty" class="card-sub" hidden>No tasks yet. Add your first task above.</p>
+        </div>
+
+        <div class="card">
+          <h2>Live EC2 Server &amp; Conflict-Free Port Gateway</h2>
+          <p class="card-sub">Port 8081 serves the Nginx App Gateway so Port 8080 stays 100% dedicated to Jenkins CI/CD.</p>
+          <div class="link-box">
+            <div>
+              <strong>Port :8081 · Nginx Reverse Proxy (Main App Link)</strong>
+              <div class="mono"><a id="dash-link-8081" href="#" target="_blank">http://localhost:8081</a></div>
+            </div>
+            <span class="badge status-done">Active (:8081)</span>
+          </div>
+          <div class="link-box">
+            <div>
+              <strong>Port :3000 · Web Frontend Service (Direct UI)</strong>
+              <div class="mono"><a id="dash-link-3000" href="#" target="_blank">http://localhost:3000</a></div>
+            </div>
+            <span class="badge status-done">Active (:3000)</span>
+          </div>
+          <div class="link-box">
+            <div>
+              <strong>Port :4000 · Node.js REST API Health JSON</strong>
+              <div class="mono"><a id="dash-link-4000" href="#" target="_blank">http://localhost:4000/api/health</a></div>
+            </div>
+            <span class="badge status-done">Active (:4000)</span>
+          </div>
+          <div class="link-box">
+            <div>
+              <strong>Port :8080 · Jenkins CI/CD Pipeline Server</strong>
+              <div class="mono"><a id="dash-link-8080" href="#" target="_blank">http://localhost:8080</a></div>
+            </div>
+            <span class="badge cat">Jenkins (:8080)</span>
+          </div>
+
+          <div style="margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--line); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+            <div class="mono" style="font-size: 0.82rem;">
+              Web Container: <strong id="web-host">…</strong> | API Container: <strong id="api-host">…</strong> | Build: <strong id="version">…</strong>
+            </div>
+            <button class="secondary small" id="goto-ec2-tab" type="button">Open Full Port Directory →</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 2: TASK MANAGER -->
+    <section id="tab-tasks" class="tab-panel">
+      <div class="card">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 14px;">
+          <div>
+            <h2>Full Task Manager &amp; Filter Suite</h2>
+            <p class="card-sub" style="margin: 0;">Search, filter, update task status, or reset default demonstration tasks.</p>
+          </div>
+          <div style="display: flex; gap: 8px;">
+            <button class="secondary small" id="seed-btn" type="button">↻ Reset Demo Tasks</button>
+          </div>
+        </div>
+
+        <div class="filter-bar">
+          <input id="filter-search" type="search" placeholder="Search tasks by title or assignee…">
+          <select id="filter-category">
+            <option value="ALL">All Categories</option>
+            <option value="DevOps">DevOps</option>
+            <option value="Cloud EC2">Cloud EC2</option>
+            <option value="Backend API">Backend API</option>
+            <option value="Frontend UI">Frontend UI</option>
+            <option value="Documentation">Documentation</option>
+          </select>
+          <select id="filter-priority">
+            <option value="ALL">All Priorities</option>
+            <option value="High">High</option>
+            <option value="Medium">Medium</option>
+            <option value="Low">Low</option>
+          </select>
+          <select id="filter-status">
+            <option value="ALL">All Statuses</option>
+            <option value="todo">To Do</option>
+            <option value="in-progress">In Progress</option>
+            <option value="done">Completed</option>
+          </select>
+          <button class="secondary" id="clear-filters" type="button">Reset Filters</button>
+        </div>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Done</th>
+              <th>Task Title</th>
+              <th>Category</th>
+              <th>Priority</th>
+              <th>Stage</th>
+              <th>Assignee</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="list"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- TAB 3: KANBAN BOARD -->
+    <section id="tab-kanban" class="tab-panel">
+      <div class="card">
+        <h2>Interactive DevOps Kanban Board</h2>
+        <p class="card-sub">Move tasks across workflow stages (To Do → In Progress → Completed) with one click.</p>
+        <div class="kanban-grid">
+          <div class="kanban-col">
+            <h3><span>📝 To Do</span> <span class="badge status-todo" id="kb-count-todo">0</span></h3>
+            <div id="kb-col-todo"></div>
+          </div>
+          <div class="kanban-col">
+            <h3><span>⚡ In Progress</span> <span class="badge status-in-progress" id="kb-count-progress">0</span></h3>
+            <div id="kb-col-progress"></div>
+          </div>
+          <div class="kanban-col">
+            <h3><span>✅ Completed</span> <span class="badge status-done" id="kb-count-done">0</span></h3>
+            <div id="kb-col-done"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 4: ANALYTICS & REPORTS -->
+    <section id="tab-analytics" class="tab-panel">
+      <div class="grid-2">
+        <div class="card">
+          <h2>Tasks Breakdown by Category</h2>
+          <p class="card-sub">Distribution of engineering &amp; documentation tasks across modules.</p>
+          <div id="analytics-categories"></div>
+
+          <h2 style="margin-top: 24px;">Overall Completion Progress</h2>
+          <div class="bar-row">
+            <div class="bar-label"><span>Project Completion Rate</span><span id="analytics-rate-label">0%</span></div>
+            <div class="bar-track"><div class="bar-fill" id="analytics-rate-bar" style="width: 0%;"></div></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>Priority &amp; Team Workload</h2>
+          <p class="card-sub">Breakdown by urgency level and assigned team member.</p>
+          <div id="analytics-priorities"></div>
+
+          <h2 style="margin-top: 24px;">Team Member Allocation</h2>
+          <table>
+            <thead>
+              <tr><th>Team Member</th><th>Assigned Tasks</th></tr>
+            </thead>
+            <tbody id="analytics-team-body"></tbody>
+          </table>
+          <div style="margin-top: 16px;">
+            <button class="secondary small" id="export-json-btn" type="button">⬇ Download Tasks JSON Report</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 5: EC2 HOST, PORTS & TEACHER LINKS -->
+    <section id="tab-ec2" class="tab-panel">
+      <div class="grid-2">
+        <div class="card">
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 12px;">
+            <div>
+              <h2>AWS EC2 Public IP &amp; Ports Directory</h2>
+              <p class="card-sub" style="margin: 0;">Send these exact links (IP address + ports) to your teacher for grading.</p>
+            </div>
+            <button id="copy-teacher-links" type="button">📋 Copy Links for Teacher</button>
+          </div>
+
+          <div style="margin-bottom: 14px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+            <label for="custom-ip-input" style="font-weight: 600; font-size: 0.88rem;">EC2 Public IP / Hostname:</label>
+            <input id="custom-ip-input" type="text" style="max-width: 240px;" placeholder="e.g. 54.169.120.45">
+            <button class="secondary small" id="apply-ip-btn" type="button">Update Links</button>
+          </div>
+
+          <table>
+            <thead>
+              <tr>
+                <th>Service / Role</th>
+                <th>Port</th>
+                <th>Live Clickable URL</th>
+              </tr>
+            </thead>
+            <tbody id="ec2-links-table"></tbody>
+          </table>
+        </div>
+
+        <div class="card">
+          <h2>Who Answered &amp; Container Health Probe</h2>
+          <p class="card-sub">Verify live responses from the Web and REST API Docker containers on your EC2 host.</p>
+          <dl style="display: grid; grid-template-columns: auto 1fr; gap: 8px 16px; margin: 0 0 16px;">
+            <dt style="color: var(--muted);">Web Container ID:</dt><dd class="mono" id="probe-web-host">…</dd>
+            <dt style="color: var(--muted);">API Container ID:</dt><dd class="mono" id="probe-api-host">…</dd>
+            <dt style="color: var(--muted);">Redis Data Store:</dt><dd class="mono" id="probe-store">…</dd>
+            <dt style="color: var(--muted);">Build Version:</dt><dd class="mono" id="probe-version">…</dd>
+          </dl>
+          <button id="probe" type="button">⚡ Send 12 Requests Probe</button>
+          <table id="tally" hidden style="margin-top: 14px;">
+            <thead><tr><th>Service &amp; Container ID</th><th style="text-align: right;">Replies</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 6: SETUP GUIDE (PORT 8081) -->
+    <section id="tab-guide" class="tab-panel">
+      <div class="card">
+        <h2>Step-by-Step Deployment Guide (Port 8081 App &amp; Port 8080 Jenkins)</h2>
+        <p class="card-sub">Copy and paste these exact commands to push to GitHub, set up AWS EC2, and deploy with Jenkins.</p>
+
+        <h3>Step 1: Push Project to GitHub</h3>
+        <pre class="codebox">cd cloudtasks
+git init -b main
+git add .
+git commit -m "feat: CloudTasks Pro v2.1 on port 8081 with Jenkins CI/CD"
+git remote add origin https://github.com/heanmatt/cloudtasks.git
+git push -u origin main --force</pre>
+
+        <h3>Step 2: AWS EC2 Security Group Inbound Ports</h3>
+        <p class="card-sub">In AWS Console → EC2 → Security Groups → Edit Inbound Rules, allow TCP from <code>0.0.0.0/0</code> on:</p>
+        <pre class="codebox">Port 22   (SSH Terminal)
+Port 8081 (Main CloudTasks Pro Web App via Nginx Reverse Proxy)
+Port 3000 (Direct Web Frontend Container)
+Port 4000 (Direct Node.js REST API Health & JSON)
+Port 8080 (Jenkins CI/CD Server)</pre>
+
+        <h3>Step 3: Install Docker &amp; Jenkins on EC2 (or Deploy Immediately)</h3>
+        <pre class="codebox">ssh -i your-key.pem ubuntu@&lt;EC2_PUBLIC_IP&gt;
+git clone https://github.com/heanmatt/cloudtasks.git
+cd cloudtasks
+chmod +x scripts/ec2-setup.sh scripts/verify.sh
+sudo ./scripts/ec2-setup.sh</pre>
+
+        <h3>Step 4: Configure Jenkins Pipeline on Port 8080</h3>
+        <pre class="codebox">1. Open http://&lt;EC2_PUBLIC_IP&gt;:8080
+2. New Item -> Name: cloudtasks-deploy -> Pipeline -> OK
+3. Build Triggers: Poll SCM (H/2 * * * *) or GitHub hook trigger
+4. Pipeline: Pipeline script from SCM -> Git -> https://github.com/heanmatt/cloudtasks.git
+5. Branch: */main -> Script Path: Jenkinsfile -> Save -> Build Now!</pre>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+    const errorBox = $('error');
+    let allTasks = [];
+    let currentHost = window.location.hostname || 'localhost';
+
+    // Smart API base: if accessed directly on port 3000 without Nginx, talk to port 4000 automatically.
+    // When accessed via Nginx on port 8081 (or port 80), relative /api paths are proxied by Nginx.
+    const API_BASE = window.location.port === '3000'
+      ? `${window.location.protocol}//${currentHost}:4000`
+      : '';
+
+    function showError(err) {
+      errorBox.textContent = err ? (err.message || String(err)) : '';
+    }
+
+    async function api(path, options) {
+      const url = path.startsWith('/api') || path === '/health' ? `${API_BASE}${path}` : path;
+      const res = await fetch(url, options);
+      if (!res.ok) {
+        let message = res.statusText;
+        try { message = (await res.json()).error || message; } catch (_) {}
+        throw new Error(message);
+      }
+      return res.status === 204 ? null : res.json();
+    }
+
+    // Tab switching
+    document.querySelectorAll('.tab-btn').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-btn').forEach((b) => b.classList.remove('active'));
+        document.querySelectorAll('.tab-panel').forEach((p) => p.classList.remove('active'));
+        btn.classList.add('active');
+        $(btn.dataset.tab).classList.add('active');
+      });
+    });
+
+    $('goto-ec2-tab').addEventListener('click', () => {
+      document.querySelector('[data-tab="tab-ec2"]').click();
+    });
+
+    // Theme toggle
+    $('theme-toggle').addEventListener('click', () => {
+      const dark = document.documentElement.getAttribute('data-theme') === 'dark';
+      document.documentElement.setAttribute('data-theme', dark ? 'light' : 'dark');
+      $('theme-toggle').textContent = dark ? '🌙 Theme' : '☀️ Theme';
+    });
+
+    function updateHostLinks(ip) {
+      currentHost = (ip || window.location.hostname || 'localhost').trim();
+      $('custom-ip-input').value = currentHost;
+      $('hdr-host-ip').textContent = `EC2 IP: ${currentHost}`;
+      $('hdr-app-link').href = `http://${currentHost}:8081`;
+      $('hdr-api-link').href = `http://${currentHost}:4000/api/health`;
+      $('hdr-jenkins-link').href = `http://${currentHost}:8080`;
+
+      $('dash-link-8081').href = `http://${currentHost}:8081`;
+      $('dash-link-8081').textContent = `http://${currentHost}:8081`;
+      $('dash-link-3000').href = `http://${currentHost}:3000`;
+      $('dash-link-3000').textContent = `http://${currentHost}:3000`;
+      $('dash-link-4000').href = `http://${currentHost}:4000/api/health`;
+      $('dash-link-4000').textContent = `http://${currentHost}:4000/api/health`;
+      $('dash-link-8080').href = `http://${currentHost}:8080`;
+      $('dash-link-8080').textContent = `http://${currentHost}:8080`;
+
+      const rows = [
+        ['Main Web App (Nginx Reverse Proxy)', ':8081', `http://${currentHost}:8081`],
+        ['Web Frontend Container (Direct UI)', ':3000', `http://${currentHost}:3000`],
+        ['REST API Health Check (JSON)', ':4000', `http://${currentHost}:4000/api/health`],
+        ['REST API All Tasks (JSON)', ':4000', `http://${currentHost}:4000/api/tasks`],
+        ['REST API Analytics Stats (JSON)', ':4000', `http://${currentHost}:4000/api/stats`],
+        ['Jenkins CI/CD Automation Dashboard', ':8080', `http://${currentHost}:8080`],
+      ];
+      const tbody = $('ec2-links-table');
+      tbody.replaceChildren();
+      for (const [role, port, url] of rows) {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td><strong>${role}</strong></td><td class="mono">${port}</td><td class="mono"><a href="${url}" target="_blank">${url}</a></td>`;
+        tbody.append(tr);
+      }
+    }
+
+    $('apply-ip-btn').addEventListener('click', () => {
+      updateHostLinks($('custom-ip-input').value);
+    });
+
+    $('copy-teacher-links').addEventListener('click', async () => {
+      const text = [
+        `CloudTasks Pro - Live AWS EC2 Deployment Links (GROUP-03)`,
+        `--------------------------------------------------------`,
+        `1. Main Application (Nginx Port 8081): http://${currentHost}:8081`,
+        `2. Direct Web UI (Port 3000):          http://${currentHost}:3000`,
+        `3. REST API Health (Port 4000):        http://${currentHost}:4000/api/health`,
+        `4. REST API Tasks JSON (Port 4000):    http://${currentHost}:4000/api/tasks`,
+        `5. Jenkins CI/CD Server (Port 8080):   http://${currentHost}:8080`,
+      ].join('\n');
+      try {
+        await navigator.clipboard.writeText(text);
+        $('copy-teacher-links').textContent = '✔ Copied to Clipboard!';
+        setTimeout(() => { $('copy-teacher-links').textContent = '📋 Copy Links for Teacher'; }, 2500);
+      } catch (_) {
+        alert(text);
+      }
+    });
+
+    function statusOf(t) {
+      if (t.done || t.status === 'done') return 'done';
+      if (t.status === 'in-progress') return 'in-progress';
+      return 'todo';
+    }
+
+    function renderAll(tasks) {
+      allTasks = tasks;
+      const total = tasks.length;
+      const done = tasks.filter((t) => statusOf(t) === 'done').length;
+      const inProg = tasks.filter((t) => statusOf(t) === 'in-progress').length;
+      const high = tasks.filter((t) => t.priority === 'High' && statusOf(t) !== 'done').length;
+      const rate = total > 0 ? Math.round((done / total) * 100) : 0;
+
+      $('kpi-total').textContent = total;
+      $('kpi-progress').textContent = inProg;
+      $('kpi-done').textContent = done;
+      $('kpi-rate').textContent = `${rate}% completion rate`;
+      $('kpi-high').textContent = high;
+      $('empty').hidden = total > 0;
+
+      const recentBody = $('dash-recent-body');
+      recentBody.replaceChildren();
+      for (const task of tasks.slice().reverse().slice(0, 6)) {
+        const st = statusOf(task);
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td><span class="badge status-${st}">${st === 'done' ? 'Completed' : st === 'in-progress' ? 'In Progress' : 'To Do'}</span></td>
+          <td class="${st === 'done' ? 'task-done-title' : ''}"><strong>${escapeHtml(task.title)}</strong></td>
+          <td><span class="badge cat">${escapeHtml(task.category || 'General')}</span></td>
+          <td><span class="badge ${escapeHtml(task.priority || 'Medium')}">${escapeHtml(task.priority || 'Medium')}</span></td>
+          <td>${escapeHtml(task.assignee || 'Hean Matt')}</td>
+        `;
+        recentBody.append(tr);
+      }
+
+      renderTaskTable();
+      renderKanban();
+      renderAnalytics(rate);
+    }
+
+    function escapeHtml(str) {
+      const div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
+    }
+
+    function renderTaskTable() {
+      const q = $('filter-search').value.trim().toLowerCase();
+      const cat = $('filter-category').value;
+      const prio = $('filter-priority').value;
+      const stFilter = $('filter-status').value;
+
+      const filtered = allTasks.filter((t) => {
+        const st = statusOf(t);
+        if (cat !== 'ALL' && (t.category || 'General') !== cat) return false;
+        if (prio !== 'ALL' && (t.priority || 'Medium') !== prio) return false;
+        if (stFilter !== 'ALL' && st !== stFilter) return false;
+        if (q && !`${t.title} ${t.assignee || ''}`.toLowerCase().includes(q)) return false;
+        return true;
+      });
+
+      const list = $('list');
+      list.replaceChildren();
+      for (const task of filtered) {
+        const st = statusOf(task);
+        const tr = document.createElement('tr');
+
+        const tdCheck = document.createElement('td');
+        const box = document.createElement('input');
+        box.type = 'checkbox';
+        box.checked = st === 'done';
+        box.addEventListener('change', () => act(() => api('/api/tasks/' + task.id, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ done: box.checked, status: box.checked ? 'done' : 'todo' }),
+        })));
+        tdCheck.append(box);
+
+        const tdTitle = document.createElement('td');
+        tdTitle.className = st === 'done' ? 'task-done-title' : '';
+        tdTitle.innerHTML = `<strong>${escapeHtml(task.title)}</strong>`;
+
+        const tdCat = document.createElement('td');
+        tdCat.innerHTML = `<span class="badge cat">${escapeHtml(task.category || 'General')}</span>`;
+
+        const tdPrio = document.createElement('td');
+        tdPrio.innerHTML = `<span class="badge ${escapeHtml(task.priority || 'Medium')}">${escapeHtml(task.priority || 'Medium')}</span>`;
+
+        const tdStage = document.createElement('td');
+        const sel = document.createElement('select');
+        sel.style.padding = '4px 8px';
+        for (const [val, label] of [['todo', 'To Do'], ['in-progress', 'In Progress'], ['done', 'Completed']]) {
+          const opt = document.createElement('option');
+          opt.value = val;
+          opt.textContent = label;
+          if (st === val) opt.selected = true;
+          sel.append(opt);
+        }
+        sel.addEventListener('change', () => act(() => api('/api/tasks/' + task.id, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: sel.value, done: sel.value === 'done' }),
+        })));
+        tdStage.append(sel);
+
+        const tdAssignee = document.createElement('td');
+        tdAssignee.textContent = task.assignee || 'Hean Matt';
+
+        const tdAct = document.createElement('td');
+        const delBtn = document.createElement('button');
+        delBtn.className = 'danger-btn small';
+        delBtn.textContent = 'Delete';
+        delBtn.addEventListener('click', () => act(() => api('/api/tasks/' + task.id, { method: 'DELETE' })));
+        tdAct.append(delBtn);
+
+        tr.append(tdCheck, tdTitle, tdCat, tdPrio, tdStage, tdAssignee, tdAct);
+        list.append(tr);
+      }
+    }
+
+    function renderKanban() {
+      const cols = {
+        todo: $('kb-col-todo'),
+        'in-progress': $('kb-col-progress'),
+        done: $('kb-col-done'),
+      };
+      const counts = { todo: 0, 'in-progress': 0, done: 0 };
+      Object.values(cols).forEach((c) => c.replaceChildren());
+
+      for (const task of allTasks) {
+        const st = statusOf(task);
+        counts[st]++;
+        const card = document.createElement('div');
+        card.className = 'kanban-card';
+        card.innerHTML = `
+          <div style="display: flex; justify-content: space-between; gap: 6px;">
+            <span class="badge cat">${escapeHtml(task.category || 'General')}</span>
+            <span class="badge ${escapeHtml(task.priority || 'Medium')}">${escapeHtml(task.priority || 'Medium')}</span>
+          </div>
+          <div class="kanban-card-title ${st === 'done' ? 'task-done-title' : ''}">${escapeHtml(task.title)}</div>
+          <div style="font-size: 0.78rem; color: var(--muted);">👤 ${escapeHtml(task.assignee || 'Hean Matt')}</div>
+        `;
+        const actions = document.createElement('div');
+        actions.className = 'kanban-actions';
+
+        if (st !== 'in-progress') {
+          const btnProg = document.createElement('button');
+          btnProg.className = 'secondary small';
+          btnProg.textContent = '▶ In Progress';
+          btnProg.addEventListener('click', () => act(() => api('/api/tasks/' + task.id, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ status: 'in-progress', done: false }),
+          })));
+          actions.append(btnProg);
+        }
+        if (st !== 'done') {
+          const btnDone = document.createElement('button');
+          btnDone.className = 'small';
+          btnDone.textContent = '✔ Complete';
+          btnDone.addEventListener('click', () => act(() => api('/api/tasks/' + task.id, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ status: 'done', done: true }),
+          })));
+          actions.append(btnDone);
+        }
+        if (st !== 'todo') {
+          const btnTodo = document.createElement('button');
+          btnTodo.className = 'secondary small';
+          btnTodo.textContent = '↺ To Do';
+          btnTodo.addEventListener('click', () => act(() => api('/api/tasks/' + task.id, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ status: 'todo', done: false }),
+          })));
+          actions.append(btnTodo);
+        }
+        card.append(actions);
+        cols[st].append(card);
+      }
+
+      $('kb-count-todo').textContent = counts.todo;
+      $('kb-count-progress').textContent = counts['in-progress'];
+      $('kb-count-done').textContent = counts.done;
+    }
+
+    function renderAnalytics(rate) {
+      $('analytics-rate-label').textContent = `${rate}%`;
+      $('analytics-rate-bar').style.width = `${rate}%`;
+
+      const total = Math.max(allTasks.length, 1);
+      const cats = {};
+      const prios = { High: 0, Medium: 0, Low: 0 };
+      const team = {};
+
+      for (const t of allTasks) {
+        const c = t.category || 'General';
+        cats[c] = (cats[c] || 0) + 1;
+        const p = ['High', 'Medium', 'Low'].includes(t.priority) ? t.priority : 'Medium';
+        prios[p]++;
+        const a = t.assignee || 'Hean Matt';
+        team[a] = (team[a] || 0) + 1;
+      }
+
+      const catBox = $('analytics-categories');
+      catBox.replaceChildren();
+      for (const [name, count] of Object.entries(cats)) {
+        const pct = Math.round((count / total) * 100);
+        const row = document.createElement('div');
+        row.className = 'bar-row';
+        row.innerHTML = `
+          <div class="bar-label"><span>${escapeHtml(name)}</span><span>${count} tasks (${pct}%)</span></div>
+          <div class="bar-track"><div class="bar-fill" style="width: ${pct}%;"></div></div>
+        `;
+        catBox.append(row);
+      }
+
+      const prioBox = $('analytics-priorities');
+      prioBox.replaceChildren();
+      for (const [name, count] of Object.entries(prios)) {
+        const pct = Math.round((count / total) * 100);
+        const row = document.createElement('div');
+        row.className = 'bar-row';
+        row.innerHTML = `
+          <div class="bar-label"><span>${name} Priority</span><span>${count} tasks (${pct}%)</span></div>
+          <div class="bar-track"><div class="bar-fill" style="width: ${pct}%;"></div></div>
+        `;
+        prioBox.append(row);
+      }
+
+      const teamBody = $('analytics-team-body');
+      teamBody.replaceChildren();
+      for (const [person, count] of Object.entries(team)) {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td><strong>${escapeHtml(person)}</strong></td><td>${count} task(s)</td>`;
+        teamBody.append(tr);
+      }
+    }
+
+    async function load() {
+      renderAll(await api('/api/tasks'));
+    }
+
+    async function identify() {
+      try {
+        const [web, apiHealth] = await Promise.all([
+          fetch('/whoami').then((r) => r.json()).catch(() => ({ host: 'web-local', version: '2.1.0' })),
+          api('/api/health'),
+        ]);
+        $('web-host').textContent = web.host;
+        $('api-host').textContent = apiHealth.host;
+        $('version').textContent = apiHealth.version;
+
+        $('probe-web-host').textContent = web.host;
+        $('probe-api-host').textContent = apiHealth.host;
+        $('probe-store').textContent = apiHealth.store || 'up';
+        $('probe-version').textContent = `web ${web.version} / api ${apiHealth.version}`;
+        $('hdr-api-status').textContent = `API & Redis: ${(apiHealth.store || 'OK').toUpperCase()}`;
+      } catch (err) {
+        $('hdr-api-status').textContent = 'API Connecting…';
+      }
+    }
+
+    async function act(fn) {
+      try {
+        showError(null);
+        await fn();
+        await load();
+        await identify();
+      } catch (err) {
+        showError(err);
+      }
+    }
+
+    async function probe() {
+      const counts = new Map();
+      const bump = (key) => counts.set(key, (counts.get(key) || 0) + 1);
+      for (let i = 0; i < 12; i++) {
+        try {
+          const [web, apiInfo] = await Promise.all([
+            fetch('/whoami').then((r) => r.json()).catch(() => ({ host: 'web-container' })),
+            api('/api/whoami'),
+          ]);
+          bump('web  ' + web.host);
+          bump('api  ' + apiInfo.host);
+        } catch (err) {
+          showError(err);
+        }
+      }
+      const body = document.querySelector('#tally tbody');
+      body.replaceChildren();
+      for (const [key, n] of [...counts.entries()].sort()) {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td class="mono">${escapeHtml(key)}</td><td class="mono" style="text-align:right;">${n}</td>`;
+        body.append(tr);
+      }
+      $('tally').hidden = false;
+    }
+
+    $('add').addEventListener('click', () => {
+      const title = $('title').value.trim();
+      if (!title) { showError(new Error('Please enter a task title first.')); return; }
+      act(async () => {
+        await api('/api/tasks', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            title,
+            category: $('category').value,
+            priority: $('priority').value,
+            assignee: $('assignee').value,
+            status: 'todo',
+          }),
+        });
+        $('title').value = '';
+      });
+    });
+
+    $('title').addEventListener('keydown', (e) => { if (e.key === 'Enter') $('add').click(); });
+    $('probe').addEventListener('click', probe);
+    $('seed-btn').addEventListener('click', () => act(() => api('/api/tasks/seed', { method: 'POST' })));
+
+    ['filter-search', 'filter-category', 'filter-priority', 'filter-status'].forEach((id) => {
+      $(id).addEventListener('input', renderTaskTable);
+      $(id).addEventListener('change', renderTaskTable);
+    });
+
+    $('clear-filters').addEventListener('click', () => {
+      $('filter-search').value = '';
+      $('filter-category').value = 'ALL';
+      $('filter-priority').value = 'ALL';
+      $('filter-status').value = 'ALL';
+      renderTaskTable();
+    });
+
+    $('export-json-btn').addEventListener('click', () => {
+      const blob = new Blob([JSON.stringify(allTasks, null, 2)], { type: 'application/json' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'cloudtasks-report.json';
+      a.click();
+    });
+
+    updateHostLinks(window.location.hostname || 'localhost');
+    act(async () => {});
+  </script>
+</body>
+</html>

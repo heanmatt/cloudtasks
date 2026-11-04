@@ -1,0 +1,13 @@
+{
+  "name": "cloudtasks-api",
+  "version": "2.1.0",
+  "description": "CloudTasks Pro REST API (Port 4000, proxied via Nginx Port 8081)",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "test": "node --test"
+  },
+  "engines": { "node": ">=20" },
+  "dependencies": { "redis": "^4.7.0" },
+  "license": "MIT"
+}

@@ -1,0 +1,12 @@
+{
+  "name": "cloudtasks-web",
+  "version": "2.1.0",
+  "description": "CloudTasks Pro 6-Tab Web Frontend (Nginx Port 8081 / Direct Port 3000)",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "test": "node --test"
+  },
+  "engines": { "node": ">=20" },
+  "license": "MIT"
+}
